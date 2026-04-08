@@ -3,7 +3,7 @@ import time
 import struct
 
 # ── I2C setup ─────────────────────────────────────────────
-i2c = I2C(id=0, scl=Pin(20), sda=Pin(22), freq=400000)
+i2c = I2C(id=0, scl=Pin(14), sda=Pin(22), freq=400000)
 
 MPU_ADDR = 0x68
 
