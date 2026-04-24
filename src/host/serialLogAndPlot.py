@@ -1,4 +1,4 @@
-# Used to log biquad filter io. Load byquad filt as main onto esp32, change interpreter to local python, run this script. It will wait until you reset
+# Used to log filter io. Load filt file as main onto esp32, change interpreter to local python, run this script. It will wait until you reset
 # the esp32 (when you reset the esp32, it begins logging samples and attempting to communicate via com port. This script intercepts those
 # values and plots them.)
 import serial
