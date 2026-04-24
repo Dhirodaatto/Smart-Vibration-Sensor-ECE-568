@@ -68,7 +68,7 @@ filt_log = [0.0] * TOTAL_SAMPLES
 FILTER_ORDER = 2    # 1, 2, or 3
 ALPHA = 0.18          # hard-coded for now, later updated via gui, knob, etc.
 # Cutoff frequencies at FS = 1000 Hz:
-#   1st order: fc = -ln(1-alpha) / (2*pi) * 1000, (-20 dB/dec)
+#   1st order: fc = -ln(1-alpha) / (2*pi) * Fs, (-20 dB/dec)
 #   2nd order: same formula, (-40 dB/dec)
 #   3rd order: same formula, (-60 dB/dec)
 #
