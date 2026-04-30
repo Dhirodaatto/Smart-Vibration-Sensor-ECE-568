@@ -1,16 +1,18 @@
-from machine import Pin, I2C, lightsleep
+from machine import Pin, I2C, deepsleep
+import machine
 import time
 import struct
 import esp32
+
+print("Awake.")
 
 # ── I2C setup ─────────────────────────────────────────────
 i2c = I2C(id=0, scl=Pin(20), sda=Pin(22), freq=400000)
 MPU_ADDR = 0x68
 
 # ── Pin configuration ────────────────────────────────────
-INTERRUPT_PIN = 15
-motion_interrupt = Pin(INTERRUPT_PIN, Pin.IN)
-esp32.wake_on_ext0(pin=motion_interrupt, level=esp32.WAKEUP_ANY_HIGH)
+motion_interrupt = Pin(15, Pin.IN)
+button = Pin(38, Pin.IN)
 
 # ── MPU-6050 Registers ───────────────────────────────────
 PWR_MGMT_1 = 0x6B
@@ -23,13 +25,19 @@ MOT_DUR = 0x20
 MOT_DETECT_CTRL = 0x69
 ACCEL_CONFIG = 0x1C
 
+# ── Wake Sources ─────────────────────────────────────────
+wake_source = machine.wake_reason()
+print(wake_source)
+SLEEP_TIME = 30_000
+esp32.wake_on_ext0(pin=motion_interrupt, level=esp32.WAKEUP_ANY_HIGH)
+esp32.wake_on_ext1(pins=(button,), level=esp32.WAKEUP_ALL_LOW)
+
 # ── Helper: Write to MPU registers ───────────────────────
 def write_to_register(register, value):
     i2c.writeto_mem(MPU_ADDR, register, bytes([value]))
 
 # ── Wake up MPU-6050 ─────────────────────────────────────
 i2c.writeto_mem(MPU_ADDR, PWR_MGMT_1, b'\x00')
-print("MPU-6050 initialized")
 
 # ── Helper: Set up MPU motion interrupt ──────────────────
 def configure_mpu_motion_interrupt():
@@ -39,7 +47,6 @@ def configure_mpu_motion_interrupt():
     write_to_register(MOT_DETECT_CTRL, 0x15) # Motion detection control
     write_to_register(INT_PIN_CFG, 0x20) # Interrupt pin: active high, push-pull, latch until cleared
     write_to_register(INT_ENABLE, 0x40) # Enable motion interrupt behavior
-    print("MPU6050 motion interrupt configured.")
 
 # ── Helper: Set up MPU motion interrupt ──────────────────
 def clear_mpu_interrupt():
@@ -61,23 +68,11 @@ def convert_gyro(val):
 def convert_temp(val):
     return (val / 340.0) + 36.53
 
-# ── Main loop ────────────────────────────────────────────
-# while True:
-#     ax, ay, az, temp, gx, gy, gz = read_raw_data()
-# 
-#     ax_g = convert_accel(ax)
-#     ay_g = convert_accel(ay)
-#     az_g = convert_accel(az)
-# 
-#     temp_c = convert_temp(temp)
-# 
-#     print("Accel (g): X={:.3f} Y={:.3f} Z={:.3f}".format(ax_g, ay_g, az_g))
-# 
-#     time.sleep(0.5)
-
-configure_mpu_motion_interrupt()
-print("Entering sleep.")
-time.sleep(0.1)
-lightsleep()
-print("Waking up.")
+# ── Enter deep sleep ─────────────────────────────────────
+def enter_sleep():
+    deepsleep(SLEEP_TIME)
+    
 clear_mpu_interrupt()
+time.sleep(2)
+configure_mpu_motion_interrupt()
+enter_sleep()
