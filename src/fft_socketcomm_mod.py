@@ -25,7 +25,7 @@ coherent_gain = float(np.sum(hanning)) / FFT_SIZE
 
 # Variables for low pass filter
 xf, yf, zf = [0,0], [0,0], [0,0]
-ALPHA = 0.2
+ALPHA = 0.2 # needs to be changed! cutoff too low!
 
 # Three pairs of ping-pong buffers — one pair per axis
 raw_x = [array.array('h', [0] * FFT_SIZE), array.array('h', [0] * FFT_SIZE)]
@@ -106,10 +106,10 @@ def update_buffers(t):
     zf[0] = zf[0] + ALPHA * (z     - zf[0])
     zf[1] = zf[1] + ALPHA * (zf[0] - zf[1])
     
-    # Update ping-pong buffers / Filtering not enabled yet
-    raw_x[current_buffer][buf_ni] = x
-    raw_y[current_buffer][buf_ni] = y
-    raw_z[current_buffer][buf_ni] = z
+    # Update ping-pong buffers / Filtering not enabled yet / Uncomment below phrases and change to enable filtering
+    raw_x[current_buffer][buf_ni] = x #int(xf[1])
+    raw_y[current_buffer][buf_ni] = y #int(yf[1])
+    raw_z[current_buffer][buf_ni] = z #int(zf[1])
     buf_ni += 1
 
     if buf_ni >= FFT_SIZE:
