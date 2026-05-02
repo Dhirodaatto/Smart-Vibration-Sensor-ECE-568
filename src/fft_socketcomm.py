@@ -119,10 +119,12 @@ def process_buffers_and_send(raw_x, raw_y, raw_z):
     fft_y = utils.spectrogram(y_arr * hanning) * (2.0 / FFT_SIZE ) / coherent_gain
     fft_z = utils.spectrogram(z_arr * hanning) * (2.0 / FFT_SIZE ) / coherent_gain
 #     fft_x[0], fft_y[0], fft_z[0] = 0,0,0 # remove DC component in FFT
+
+    fft_data_packet = [[k*sampling_rate/FFT_SIZE for k in range(FFT_SIZE//2)], fft_z.tolist()] # Data packet to send to thingsboard?
     
     # TODO: Other FFT Processing Tasks as required
     
-    # TODO: Thingsboard send logic (Currently websockets are sending)
+    # TODO: Thingsboard send logic (Currently websockets are being used)
     global seq, sock, dest
     payload = struct.pack('<I', int(seq)) + fft_z[:FFT_SIZE//2].tobytes()
     
