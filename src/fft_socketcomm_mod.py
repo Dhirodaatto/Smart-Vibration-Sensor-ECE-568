@@ -150,7 +150,10 @@ def process_buffers_and_send(raw_x, raw_y, raw_z):
     rms_y =  math.sqrt(float(np.sum(y_arr_corr**2)) / FFT_SIZE)
     rms_z =  math.sqrt(float(np.sum(z_arr_corr**2)) / FFT_SIZE)
     
-    fft_data_packet = [[k*sampling_rate/FFT_SIZE for k in range(FFT_SIZE//2)], fft_z.tolist()] # Data packet to send to thingsboard?
+    total_rms = np.sqrt(rms_x**2 + rms_y**2 + rms_z**2)
+    
+    # struct is a list containing [frequency_bins (list), magnitude_fft_output (list), total_rms (scalar)]
+    fft_data_packet = [[k*sampling_rate/FFT_SIZE for k in range(FFT_SIZE//2)], fft_z.tolist(), total_rms] # Data packet to send to thingsboard?
     
     # TODO: Thingsboard send logic (Currently websockets are being used)
     global seq, sock, dest
