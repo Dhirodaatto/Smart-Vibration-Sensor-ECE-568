@@ -11,7 +11,7 @@ from ulab import utils as utils
 from config import SSID, PSWD
 
 ## ----------------------- Global Variables ------------------
-dest = '172.16.79.120', 5005 # IP, Port
+dest = 'IP_HERE', 5005 # IP, Port
 sock = None
 
 sampling_rate = 500 # Hz
