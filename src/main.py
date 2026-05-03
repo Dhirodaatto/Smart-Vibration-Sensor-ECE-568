@@ -4,8 +4,6 @@ import time
 import struct
 import esp32
 
-print("Awake.")
-
 # ── I2C setup ─────────────────────────────────────────────
 i2c = I2C(id=0, scl=Pin(20), sda=Pin(22), freq=400000)
 MPU_ADDR = 0x68
@@ -20,17 +18,29 @@ ACCEL_XOUT_H = 0x3B
 INT_ENABLE = 0x38
 INT_PIN_CFG = 0x37
 INT_STATUS = 0x3A
-MOT_THR = 0x1F
-MOT_DUR = 0x20
+MOT_THR = 0x1F # MOTION THRESHOLD - MAY NEED ADJUSTMENT
+MOT_DUR = 0x20 # MOTION DURATION - MAY NEED ADJUSTMENT
 MOT_DETECT_CTRL = 0x69
 ACCEL_CONFIG = 0x1C
 
-# ── Wake Sources ─────────────────────────────────────────
-wake_source = machine.wake_reason()
-print(wake_source)
+# ── Set Up Wake Sources ──────────────────────────────────
 SLEEP_TIME = 30_000
 esp32.wake_on_ext0(pin=motion_interrupt, level=esp32.WAKEUP_ANY_HIGH)
 esp32.wake_on_ext1(pins=(button,), level=esp32.WAKEUP_ALL_LOW)
+
+# ── Process Wake Source ──────────────────────────────────
+POWER_ON_RESET = 0
+WAKE_ON_EXT0 = 1
+WAKE_ON_EXT1 = 2
+WAKE_ON_TIMER = 3
+wake_source = machine.wake_reason()
+
+if wake_source == WAKE_ON_EXT0:
+    collect_data_for_motion_interrupt()
+elif wake_source == WAKE_ON_EXT1:
+    collect_data_for_button_push()
+elif wake_source == WAKE_ON_TIMER:
+    collect_data_for_regular_interval()
 
 # ── Helper: Write to MPU registers ───────────────────────
 def write_to_register(register, value):
@@ -71,6 +81,16 @@ def convert_temp(val):
 # ── Enter deep sleep ─────────────────────────────────────
 def enter_sleep():
     deepsleep(SLEEP_TIME)
+
+# ── Data collection stub functions ───────────────────────
+def collect_data_for_motion_interrupt():
+    pass
+
+def collect_data_for_button_push():
+    pass
+
+def collect_data_for_regular_interval():
+    pass
     
 clear_mpu_interrupt()
 time.sleep(2)
