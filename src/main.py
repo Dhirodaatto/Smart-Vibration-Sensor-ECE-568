@@ -28,6 +28,14 @@ SLEEP_TIME = 30_000
 esp32.wake_on_ext0(pin=motion_interrupt, level=esp32.WAKEUP_ANY_HIGH)
 esp32.wake_on_ext1(pins=(button,), level=esp32.WAKEUP_ALL_LOW)
 
+# ── Data collection stub functions ───────────────────────
+def collect_data_for_motion_interrupt():
+    print('motion')
+def collect_data_for_button_push():
+    print('button')
+def collect_data_for_regular_interval():
+    print('normal')
+
 # ── Process Wake Source ──────────────────────────────────
 POWER_ON_RESET = 0
 WAKE_ON_EXT0 = 1
@@ -41,6 +49,8 @@ elif wake_source == WAKE_ON_EXT1:
     collect_data_for_button_push()
 elif wake_source == WAKE_ON_TIMER:
     collect_data_for_regular_interval()
+else:
+    pass
 
 # ── Helper: Write to MPU registers ───────────────────────
 def write_to_register(register, value):
@@ -81,16 +91,6 @@ def convert_temp(val):
 # ── Enter deep sleep ─────────────────────────────────────
 def enter_sleep():
     deepsleep(SLEEP_TIME)
-
-# ── Data collection stub functions ───────────────────────
-def collect_data_for_motion_interrupt():
-    pass
-
-def collect_data_for_button_push():
-    pass
-
-def collect_data_for_regular_interval():
-    pass
     
 clear_mpu_interrupt()
 time.sleep(2)
