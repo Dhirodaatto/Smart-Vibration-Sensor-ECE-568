@@ -275,7 +275,6 @@ def collect_and_send_samples(number_of_samples=0):
     global last_duration_us
     client.check_msg()   # attribute updates
     if number_of_samples > 0:
-        print("Capturing samples:",number_of_samples)
         for i in range(number_of_samples):
             if flag_data_ready:
                 send_success = process_buffers_and_send(
@@ -285,7 +284,6 @@ def collect_and_send_samples(number_of_samples=0):
                     print('Send Failed!!')
                 flag_data_ready = False
     else:
-        print("Capturing indefinitely.")
         while True:
             if flag_data_ready:
                 send_success = process_buffers_and_send(
