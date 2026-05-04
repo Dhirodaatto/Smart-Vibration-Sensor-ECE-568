@@ -247,6 +247,17 @@ def process_buffers_and_send(raw_x, raw_y, raw_z):
 def clear_mpu_interrupt():
     i2c.readfrom_mem(mpu_addr, INT_STATUS, 1) # Interrupt won't clear until we read this register
     
+def write_to_register(register, value):
+    i2c.writeto_mem(mpu_addr, register, bytes([value]))
+
+def configure_mpu_motion_interrupt():
+    write_to_register(ACCEL_CONFIG, 0x10) # Set accelerometer range +/-8g (optional)
+    write_to_register(MOT_THR, 5) # Motion threshold, higher=less sensitive, lower=more sensitive
+    write_to_register(MOT_DUR, 5) # Motion duration, in 1ms increments
+    write_to_register(MOT_DETECT_CTRL, 0x15) # Motion detection control
+    write_to_register(INT_PIN_CFG, 0x20) # Interrupt pin: active high, push-pull, latch until cleared
+    write_to_register(INT_ENABLE, 0x40) # Enable motion interrupt behavior
+    
 #     payload_dict = {
 #         "amplitudes": amplitudes,
 #         "freq_bins":  freq_bins,
