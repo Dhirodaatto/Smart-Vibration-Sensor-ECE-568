@@ -79,6 +79,10 @@ WAKE_ON_EXT0 = 1
 WAKE_ON_EXT1 = 2
 WAKE_ON_TIMER = 3
 
+SLEEP_TIME = 30_000
+esp32.wake_on_ext0(pin=motion_interrupt, level=esp32.WAKEUP_ANY_HIGH)
+esp32.wake_on_ext1(pins=(button,), level=esp32.WAKEUP_ALL_LOW)
+
 ## ----------------------- Function Declaration -------------
 def wifi_connect():
     wlan = network.WLAN(network.STA_IF)
