@@ -57,11 +57,11 @@ amp_threshold = 5.0 # m/s²
 freq_low = 50.0 # Hz
 freq_high = 100.0 # Hz
 
-# ── Input configuration ──────────────────────────────────
+# Input configuration
 motion_interrupt = machine.Pin(15, machine.Pin.IN)
 button = machine.Pin(38, machine.Pin.IN)
 
-# ── MPU-6050 Registers ───────────────────────────────────
+# MPU-6050 Registers
 PWR_MGMT_1 = 0x6B
 ACCEL_XOUT_H = 0x3B
 INT_ENABLE = 0x38
@@ -73,6 +73,7 @@ MOT_DETECT_CTRL = 0x69
 ACCEL_CONFIG = 0x1C
 
 # Wake Sources
+WAKE_SOURCE = machine.wake_reason()
 POWER_ON_RESET = 0
 WAKE_ON_EXT0 = 1
 WAKE_ON_EXT1 = 2
