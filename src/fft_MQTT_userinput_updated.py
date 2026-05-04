@@ -305,8 +305,10 @@ i2c = machine.I2C(0, scl=machine.Pin(20), sda=machine.Pin(22), freq=400000)
 mpu_addr = i2c.scan()[0]
 i2c.writeto(mpu_addr, bytearray([107, 0])) # wakeup command
 time.sleep_ms(100)
+clear_mpu_interrupt()
+time.sleep(2)
 print('MPU6050 is ready!')
-
+configure_mpu_motion_interrupt()
 get_calibration_param()
 
 wifi_connect()
