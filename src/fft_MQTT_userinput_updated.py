@@ -58,8 +58,8 @@ freq_low = 50.0 # Hz
 freq_high = 100.0 # Hz
 
 # ── Input configuration ──────────────────────────────────
-motion_interrupt = Pin(15, Pin.IN)
-button = Pin(38, Pin.IN)
+motion_interrupt = machine.Pin(15, machine.Pin.IN)
+button = machine.Pin(38, machine.Pin.IN)
 
 # ── MPU-6050 Registers ───────────────────────────────────
 PWR_MGMT_1 = 0x6B
