@@ -76,9 +76,9 @@ ACCEL_CONFIG = 0x1C
 # Wake Sources
 WAKE_SOURCE = machine.wake_reason()
 POWER_ON_RESET = 0
-WAKE_ON_EXT0 = 1
-WAKE_ON_EXT1 = 2
-WAKE_ON_TIMER = 3
+WAKE_ON_MOTION = 1
+WAKE_ON_BUTTON = 3
+WAKE_ON_TIMER = 4
 
 SLEEP_TIME = 30_000
 esp32.wake_on_ext0(pin=motion_interrupt, level=esp32.WAKEUP_ANY_HIGH)
@@ -274,15 +274,36 @@ def collect_and_send_samples(number_of_samples=0):
     global flag_data_ready
     global last_duration_us
     client.check_msg()   # attribute updates
-    for i in range(number_of_samples):
-        if flag_data_ready:
-            #send_success = process_buffers_and_send(
-            #    raw_x[fft_data_buffer], raw_y[fft_data_buffer], raw_z[fft_data_buffer])
-            print(f'Execution Time = {last_duration_us} us')
-            if not send_success:
-                print('Send Failed!!')
-            flag_data_ready = False
+    if number_of_samples > 0:
+        print("Capturing samples:",number_of_samples)
+        for i in range(number_of_samples):
+            if flag_data_ready:
+                send_success = process_buffers_and_send(
+                    raw_x[fft_data_buffer], raw_y[fft_data_buffer], raw_z[fft_data_buffer])
+                print(f'Execution Time = {last_duration_us} us')
+                if not send_success:
+                    print('Send Failed!!')
+                flag_data_ready = False
+    else:
+        print("Capturing indefinitely.")
+        while True:
+            if flag_data_ready:
+                send_success = process_buffers_and_send(
+                    raw_x[fft_data_buffer], raw_y[fft_data_buffer], raw_z[fft_data_buffer])
+                print(f'Execution Time = {last_duration_us} us')
+                if not send_success:
+                    print('Send Failed!!')
+                flag_data_ready = False
+
+def enter_sleep():
+    machine.deepsleep(SLEEP_TIME)
     
+def button_pressed(button):
+    time.sleep_ms(200)
+    while button.value() == 0:
+        pass
+    enter_sleep()
+
 #     payload_dict = {
 #         "amplitudes": amplitudes,
 #         "freq_bins":  freq_bins,
@@ -339,6 +360,16 @@ print('MQTT connected to ThingsBoard!')
 timer0 = machine.Timer(0)
 timer0.init(mode=machine.Timer.PERIODIC, period=sample_period, callback=update_buffers)
 
+button.irq(trigger=machine.Pin.IRQ_FALLING, handler=button_pressed)
+
 # Main loop
 print('Setup complete. Main Loop has started running ...')
-collect_and_send_samples(3)
+if WAKE_SOURCE == WAKE_ON_MOTION:
+    collect_and_send_samples(50)
+elif WAKE_SOURCE == WAKE_ON_BUTTON:
+    collect_and_send_samples()
+elif WAKE_SOURCE == WAKE_ON_TIMER:
+    collect_and_send_samples(50)
+else:
+    pass
+enter_sleep()
