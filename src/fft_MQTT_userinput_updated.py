@@ -244,6 +244,9 @@ def process_buffers_and_send(raw_x, raw_y, raw_z):
         print("Unexpected error:", e)
     return False
 
+def clear_mpu_interrupt():
+    i2c.readfrom_mem(mpu_addr, INT_STATUS, 1) # Interrupt won't clear until we read this register
+    
 #     payload_dict = {
 #         "amplitudes": amplitudes,
 #         "freq_bins":  freq_bins,
@@ -277,7 +280,7 @@ def process_buffers_and_send(raw_x, raw_y, raw_z):
 # Setup I2C communication
 i2c = machine.I2C(0, scl=machine.Pin(20), sda=machine.Pin(22), freq=400000)
 mpu_addr = i2c.scan()[0]
-i2c.writeto(0x68, bytearray([107, 0])) # wakeup command
+i2c.writeto(mpu_addr, bytearray([107, 0])) # wakeup command
 time.sleep_ms(100)
 print('MPU6050 is ready!')
 
