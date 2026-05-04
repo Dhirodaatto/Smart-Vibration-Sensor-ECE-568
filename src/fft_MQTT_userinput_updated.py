@@ -6,6 +6,7 @@ import socket, struct
 import machine
 import json
 import ntptime
+import esp32
 
 from ulab import numpy as np
 from ulab import utils as utils
