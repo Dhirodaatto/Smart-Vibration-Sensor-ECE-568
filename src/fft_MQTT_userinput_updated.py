@@ -57,6 +57,21 @@ amp_threshold = 5.0 # m/s²
 freq_low = 50.0 # Hz
 freq_high = 100.0 # Hz
 
+# ── Input configuration ──────────────────────────────────
+motion_interrupt = Pin(15, Pin.IN)
+button = Pin(38, Pin.IN)
+
+# ── MPU-6050 Registers ───────────────────────────────────
+PWR_MGMT_1 = 0x6B
+ACCEL_XOUT_H = 0x3B
+INT_ENABLE = 0x38
+INT_PIN_CFG = 0x37
+INT_STATUS = 0x3A
+MOT_THR = 0x1F # MOTION THRESHOLD - MAY NEED ADJUSTMENT
+MOT_DUR = 0x20 # MOTION DURATION - MAY NEED ADJUSTMENT
+MOT_DETECT_CTRL = 0x69
+ACCEL_CONFIG = 0x1C
+
 ## ----------------------- Function Declaration -------------
 def wifi_connect():
     wlan = network.WLAN(network.STA_IF)
