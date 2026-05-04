@@ -72,6 +72,12 @@ MOT_DUR = 0x20 # MOTION DURATION - MAY NEED ADJUSTMENT
 MOT_DETECT_CTRL = 0x69
 ACCEL_CONFIG = 0x1C
 
+# Wake Sources
+POWER_ON_RESET = 0
+WAKE_ON_EXT0 = 1
+WAKE_ON_EXT1 = 2
+WAKE_ON_TIMER = 3
+
 ## ----------------------- Function Declaration -------------
 def wifi_connect():
     wlan = network.WLAN(network.STA_IF)
@@ -313,13 +319,13 @@ timer0 = machine.Timer(0)
 timer0.init(mode=machine.Timer.PERIODIC, period=sample_period, callback=update_buffers)
 
 # Main loop
-print('Setup complete. Main Loop has started running ...')
-while True:
-    client.check_msg()   # attribute updates
-    if flag_data_ready:
-        send_success = process_buffers_and_send(
-            raw_x[fft_data_buffer], raw_y[fft_data_buffer], raw_z[fft_data_buffer])
-        print(f'Execution Time = {last_duration_us} us')
-        if not send_success:
-            print('Send Failed!!')
-        flag_data_ready = False
+# print('Setup complete. Main Loop has started running ...')
+# while True:
+#     client.check_msg()   # attribute updates
+#     if flag_data_ready:
+#         send_success = process_buffers_and_send(
+#             raw_x[fft_data_buffer], raw_y[fft_data_buffer], raw_z[fft_data_buffer])
+#         print(f'Execution Time = {last_duration_us} us')
+#         if not send_success:
+#             print('Send Failed!!')
+#         flag_data_ready = False
