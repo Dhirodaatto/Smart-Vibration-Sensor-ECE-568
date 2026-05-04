@@ -275,11 +275,13 @@ def collect_and_send_samples(number_of_samples=0):
     global last_duration_us
     client.check_msg()   # attribute updates
     if number_of_samples > 0:
-        for i in range(number_of_samples):
+        i = 0
+        while i < number_of_samples:
             if flag_data_ready:
                 send_success = process_buffers_and_send(
                     raw_x[fft_data_buffer], raw_y[fft_data_buffer], raw_z[fft_data_buffer])
                 print(f'Execution Time = {last_duration_us} us')
+                i += 1
                 if not send_success:
                     print('Send Failed!!')
                 flag_data_ready = False
@@ -294,6 +296,8 @@ def collect_and_send_samples(number_of_samples=0):
                 flag_data_ready = False
 
 def enter_sleep():
+    print("Sleeping...")
+    time.sleep_ms(10)
     machine.deepsleep(SLEEP_TIME)
     
 def button_pressed(button):
@@ -361,12 +365,23 @@ timer0.init(mode=machine.Timer.PERIODIC, period=sample_period, callback=update_b
 button.irq(trigger=machine.Pin.IRQ_FALLING, handler=button_pressed)
 
 # Main loop
-print('Setup complete. Main Loop has started running ...')
+print('Setup complete.')
+print('Wake reason: ', end='')
 if WAKE_SOURCE == WAKE_ON_MOTION:
+    print('Motion threshold exceeded.')
+    first_message = False
     collect_and_send_samples(50)
 elif WAKE_SOURCE == WAKE_ON_BUTTON:
+    print('Capture button pressed.')
+    first_message = True
     collect_and_send_samples()
 elif WAKE_SOURCE == WAKE_ON_TIMER:
+    print('Sleep timer.')
+    first_message = False
+    collect_and_send_samples(50)
+elif WAKE_SOURCE == POWER_ON_RESET:
+    print('Power-on reset occurred.')
+    first_message = False
     collect_and_send_samples(50)
 else:
     pass
