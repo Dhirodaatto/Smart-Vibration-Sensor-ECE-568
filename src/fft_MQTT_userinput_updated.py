@@ -76,7 +76,7 @@ ACCEL_CONFIG = 0x1C
 # Wake Sources
 WAKE_SOURCE = machine.wake_reason()
 POWER_ON_RESET = 0
-WAKE_ON_MOTION = 1
+WAKE_ON_MOTION = 2
 WAKE_ON_BUTTON = 3
 WAKE_ON_TIMER = 4
 
@@ -372,7 +372,7 @@ if WAKE_SOURCE == WAKE_ON_MOTION:
     first_message = False
     collect_and_send_samples(50)
 elif WAKE_SOURCE == WAKE_ON_BUTTON:
-    print('Capture button pressed.')
+    print('Button pressed.')
     first_message = True
     collect_and_send_samples()
 elif WAKE_SOURCE == WAKE_ON_TIMER:
