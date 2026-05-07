@@ -204,9 +204,9 @@ def process_buffers_and_send(raw_x, raw_y, raw_z):
     fft_y = utils.spectrogram(y_arr * hanning) * (2.0 / FFT_SIZE) / coherent_gain
     fft_z = utils.spectrogram(z_arr * hanning) * (2.0 / FFT_SIZE) / coherent_gain
 
-    peakmag_x, peakfreq_x = np.max(fft_x), int(np.argmax(fft_x)) * sampling_rate / FFT_SIZE
-    peakmag_y, peakfreq_y = np.max(fft_y), int(np.argmax(fft_y)) * sampling_rate / FFT_SIZE
-    peakmag_z, peakfreq_z = np.max(fft_z), int(np.argmax(fft_z)) * sampling_rate / FFT_SIZE
+    peakmag_x, peakfreq_x = np.max(fft_x[:FFT_SIZE // 2]), int(np.argmax(fft_x[:FFT_SIZE // 2])) * sampling_rate / FFT_SIZE
+    peakmag_y, peakfreq_y = np.max(fft_y[:FFT_SIZE // 2]), int(np.argmax(fft_y[:FFT_SIZE // 2])) * sampling_rate / FFT_SIZE
+    peakmag_z, peakfreq_z = np.max(fft_z[:FFT_SIZE // 2]), int(np.argmax(fft_z[:FFT_SIZE // 2])) * sampling_rate / FFT_SIZE
 
     rms_x = math.sqrt(float(np.sum(x_arr**2)) / FFT_SIZE)
     rms_y = math.sqrt(float(np.sum(y_arr**2)) / FFT_SIZE)
