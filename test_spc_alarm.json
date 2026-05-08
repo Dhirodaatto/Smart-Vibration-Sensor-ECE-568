@@ -1,0 +1,402 @@
+{
+  "ruleChain": {
+    "name": "Test SPC Alarm",
+    "type": "CORE",
+    "firstRuleNodeId": null,
+    "root": false,
+    "debugMode": false,
+    "configuration": null,
+    "additionalInfo": {
+      "description": "SPC Vibration Logic"
+    }
+  },
+  "metadata": {
+    "version": 114,
+    "firstNodeIndex": 0,
+    "nodes": [
+      {
+        "type": "org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNode",
+        "name": "Save Telemetry",
+        "debugSettings": {
+          "failuresEnabled": false,
+          "allEnabled": false,
+          "allEnabledUntil": 0
+        },
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 1,
+        "configuration": {
+          "processingSettings": {
+            "timeseries": {
+              "type": "ON_EVERY_MESSAGE"
+            },
+            "latest": {
+              "type": "ON_EVERY_MESSAGE"
+            },
+            "webSockets": {
+              "type": "ON_EVERY_MESSAGE"
+            },
+            "calculatedFields": {
+              "type": "ON_EVERY_MESSAGE"
+            },
+            "type": "ADVANCED"
+          },
+          "defaultTTL": 0,
+          "useServerTs": false
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 333,
+          "layoutY": 151
+        }
+      },
+      {
+        "type": "org.thingsboard.rule.engine.metadata.TbGetTelemetryNode",
+        "name": "Telemetry fetch",
+        "debugSettings": {
+          "failuresEnabled": false,
+          "allEnabled": false,
+          "allEnabledUntil": 0
+        },
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 2,
+        "configuration": {
+          "latestTsKeyNames": [
+            "total_rms"
+          ],
+          "aggregation": "NONE",
+          "fetchMode": "ALL",
+          "orderBy": "DESC",
+          "limit": 500,
+          "useMetadataIntervalPatterns": false,
+          "startIntervalPattern": "",
+          "endIntervalPattern": "",
+          "startInterval": 5,
+          "startIntervalTimeUnit": "MINUTES",
+          "endInterval": 1,
+          "endIntervalTimeUnit": "MILLISECONDS"
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 66,
+          "layoutY": 306
+        }
+      },
+      {
+        "type": "org.thingsboard.rule.engine.action.TbCreateAlarmNode",
+        "name": "SPC Interlock",
+        "debugSettings": {
+          "failuresEnabled": false,
+          "allEnabled": false,
+          "allEnabledUntil": 1777771977663
+        },
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 0,
+        "configuration": {
+          "scriptLang": "JS",
+          "alarmDetailsBuildJs": "var details = {\n    message: \"RMS value exceeded 3-sigma limits.\",\n    current_rms: msg.total_rms || 0,\n    upper_limit: msg.ucl || metadata.ss_ss_ucl || metadata.ss_ucl || \"N/A\",\n    lower_limit: msg.lcl || metadata.ss_ss_lcl || metadata.ss_ucl || \"N/A\",\n    spc_status: metadata.spcStatus\n};\n\nif (metadata.prevAlarmDetails) {\n    details = JSON.parse(metadata.prevAlarmDetails);\n    delete metadata.prevAlarmDetails;\n}\n\nreturn details;",
+          "alarmDetailsBuildTbel": "var details = {};\nif (metadata.prevAlarmDetails != null) {\n    details = JSON.parse(metadata.prevAlarmDetails);\n    //remove prevAlarmDetails from metadata\n    metadata.remove('prevAlarmDetails');\n    //now metadata is the same as it comes IN this rule node\n}\n\n\nreturn details;",
+          "useMessageAlarmData": false,
+          "overwriteAlarmDetails": false,
+          "alarmType": "Out of Control Interlock",
+          "severity": "WARNING",
+          "propagate": true,
+          "relationTypes": [],
+          "propagateToOwner": false,
+          "propagateToOwnerHierarchy": false,
+          "propagateToTenant": false,
+          "dynamicSeverity": false
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 1645,
+          "layoutY": 615
+        }
+      },
+      {
+        "type": "org.thingsboard.rule.engine.filter.TbJsSwitchNode",
+        "name": "Switch",
+        "debugSettings": {
+          "failuresEnabled": false,
+          "allEnabled": false,
+          "allEnabledUntil": 1777836188520
+        },
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 0,
+        "configuration": {
+          "scriptLang": "JS",
+          "jsScript": "var status = metadata.spcStatus;\nvar routes = [];\n\n// 1. Always route to Freeze if the flag is there to ensure the save happens\nif (metadata.shouldFreeze === 'true') {\n    routes.push('Freeze Limits');\n}\n\n// 2. Always allow 'Out of Control' messages through, even during a freeze\nif (status === 'Out of Control') {\n    routes.push('Out of Control');\n} \n\n// 3. ONLY route to 'Normal' if we AREN'T currently freezing\nelse if (status === 'Normal' && metadata.shouldFreeze !== 'true') {\n    routes.push('Normal');\n}\n\nreturn routes;",
+          "tbelScript": "function nextRelation(metadata, msg) {\n    return ['one','nine'];\n}\nif(msgType == 'POST_TELEMETRY_REQUEST') {\n    return ['two'];\n}\nreturn nextRelation(metadata, msg);"
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 1378,
+          "layoutY": 429
+        }
+      },
+      {
+        "type": "org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNode",
+        "name": "Post SPC Calc",
+        "debugSettings": {
+          "failuresEnabled": false,
+          "allEnabled": false,
+          "allEnabledUntil": 1777768360197
+        },
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 1,
+        "configuration": {
+          "defaultTTL": 0,
+          "useServerTs": false,
+          "processingSettings": {
+            "type": "ON_EVERY_MESSAGE"
+          }
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 1646,
+          "layoutY": 258
+        }
+      },
+      {
+        "type": "org.thingsboard.rule.engine.transform.TbTransformMsgNode",
+        "name": "SPC Calc",
+        "debugSettings": {
+          "failuresEnabled": false,
+          "allEnabled": false,
+          "allEnabledUntil": 1777836188520
+        },
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 0,
+        "configuration": {
+          "scriptLang": "JS",
+          "jsScript": "// 1. Setup & Dynamic Limit Extraction\n// Prioritize the Server Attribute (ss_start_ts) to ensure reset works\nvar start = Number(metadata.ss_start_ts || 0); \nvar now = new Date().getTime();\n\n// Fetch the user-defined limit. Default to 60.\nvar userLimitSeconds = parseFloat(metadata.ss_calibration_limit || 60);\nvar userLimitMs = userLimitSeconds * 1000;\n\nvar history = [];\n\n// CRITICAL FIX: If start is 0, elapsed must be 0\nvar elapsedMs = (start > 0) ? (now - start) : 0;\n\ntry {\n    history = JSON.parse(metadata.total_rms || '[]');\n} catch (e) {\n    history = [];\n}\nhistory.unshift({ ts: now, value: parseFloat(msg.total_rms) });\nif (history.length > 90) {\n    history = history.slice(0, 90); \n}\n\n// 2. Robust Frozen Check\nvar savedUcl = metadata.ss_ucl || metadata.ss_ss_ucl;\nvar savedLcl = metadata.ss_lcl || metadata.ss_ss_lcl;\nvar savedMean = metadata.ss_mean || metadata.ss_ss_mean;\n\nvar isAlreadyFrozen = (savedUcl !== undefined && savedUcl !== null && savedUcl !== 'null');\n\n// 3. Reset temporary flags\ndelete metadata.shouldFreeze;\ndelete metadata.shouldSaveStart;\n\n// 4. Logic Branching\nif (isAlreadyFrozen) {\n    // LOCK MODE: Use saved attributes only\n    msg.ucl = parseFloat(savedUcl);\n    msg.lcl = parseFloat(savedLcl);\n    msg.mean = parseFloat(savedMean);\n} else if (history.length >= 20) {\n    // CALIBRATION MODE: Live Math\n    var values = history.map(function(item) { return parseFloat(item.value || item.v || 0); });\n    var sum = 0;\n    for(var i=0; i<values.length; i++) { sum += values[i]; }\n    var mean = sum / values.length;\n    \n    var sqDiffSum = 0;\n    for(var j=0; j<values.length; j++) { sqDiffSum += Math.pow(values[j] - mean, 2); }\n    var sigma = Math.sqrt(sqDiffSum / values.length);\n\n    msg.ucl = mean + (3 * sigma);\n    msg.lcl = mean - (3 * sigma);\n    msg.mean = mean;\n    \n    // Trigger transition if dynamic time is up\n    if (start > 0 && elapsedMs >= userLimitMs) { \n        metadata.shouldFreeze = 'true';\n        msg.ss_ucl = msg.ucl;\n        msg.ss_lcl = msg.lcl;\n        msg.ss_mean = msg.mean;\n    }\n}\n\n// 5. Cleanup & Debug\nvar currentRMS = parseFloat(msg.total_rms || 0);\nvar uclLimit = msg.ucl || 999;\nvar lclLimit = msg.lcl || -999;\nmetadata.spcStatus = (currentRMS > uclLimit || currentRMS < lclLimit) ? 'Out of Control' : 'Normal';\n\nmetadata.debug_trace = JSON.stringify({\n    \"isAlreadyFrozen\": isAlreadyFrozen,\n    \"final_ucl_used\": msg.ucl,\n    \"shouldFreeze\": metadata.shouldFreeze === 'true',\n    \"startTime\": start,\n    \"currentTime\": now,\n    \"calibrationLimit\": userLimitSeconds, // Track the limit used in debug\n    \"elapsedSeconds\": (elapsedMs / 1000).toFixed(2)\n});\n\ndelete metadata.total_rms;\ndelete metadata.fft_amplitudes;\n\n// 6. Return Logic (Standard TB Multi-output format)\nvar elapsedSeconds = parseFloat((elapsedMs / 1000).toFixed(2));\nmsg.elapsedSeconds = elapsedSeconds;\n\nif (metadata.shouldFreeze === 'true') {\n    var attributeMsg = {\n        msg: { ss_ucl: msg.ucl, ss_lcl: msg.lcl, ss_mean: msg.mean }, \n        metadata: metadata, \n        msgType: 'POST_ATTRIBUTES_REQUEST'\n    };\n    \n    var telemetryMsg = {\n        msg: JSON.parse(JSON.stringify(msg)), \n        metadata: JSON.parse(JSON.stringify(metadata)),\n        msgType: 'POST_TELEMETRY_REQUEST'\n    };\n    telemetryMsg.metadata.ss_ucl = msg.ucl.toString(); \n    delete telemetryMsg.metadata.shouldFreeze;\n\n    return [attributeMsg, telemetryMsg];\n}\n\nreturn {msg: msg, metadata: metadata, msgType: msgType};",
+          "tbelScript": "return {msg: msg, metadata: metadata, msgType: msgType};"
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 1046,
+          "layoutY": 430
+        }
+      },
+      {
+        "type": "org.thingsboard.rule.engine.metadata.TbGetAttributesNode",
+        "name": "Calibration VS Monitoring",
+        "debugSettings": {
+          "failuresEnabled": false,
+          "allEnabled": false,
+          "allEnabledUntil": 1777601126267
+        },
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 1,
+        "configuration": {
+          "tellFailureIfAbsent": false,
+          "fetchTo": "METADATA",
+          "clientAttributeNames": [],
+          "sharedAttributeNames": [],
+          "serverAttributeNames": [
+            "ss_ucl",
+            "ss_lcl",
+            "ss_mean",
+            "start_ts",
+            "calibration_limit"
+          ],
+          "latestTsKeyNames": [],
+          "getLatestValueWithTs": false
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 57,
+          "layoutY": 432
+        }
+      },
+      {
+        "type": "org.thingsboard.rule.engine.telemetry.TbMsgAttributesNode",
+        "name": "Save Limits",
+        "debugSettings": {
+          "failuresEnabled": false,
+          "allEnabled": false,
+          "allEnabledUntil": 1777768360197
+        },
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 3,
+        "configuration": {
+          "processingSettings": {
+            "attributes": {
+              "type": "ON_EVERY_MESSAGE"
+            },
+            "webSockets": {
+              "type": "ON_EVERY_MESSAGE"
+            },
+            "calculatedFields": {
+              "type": "ON_EVERY_MESSAGE"
+            },
+            "type": "ADVANCED"
+          },
+          "scope": "SERVER_SCOPE",
+          "notifyDevice": false,
+          "sendAttributesUpdatedNotification": false,
+          "updateAttributesOnlyOnValueChange": false
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 1727,
+          "layoutY": 494
+        }
+      },
+      {
+        "type": "org.thingsboard.rule.engine.transform.TbTransformMsgNode",
+        "name": "Time-Stamp Transform",
+        "debugSettings": {
+          "failuresEnabled": false,
+          "allEnabled": false,
+          "allEnabledUntil": 1777836188520
+        },
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 0,
+        "configuration": {
+          "scriptLang": "JS",
+          "jsScript": "// 1. Clean up heavy data to avoid truncation errors\ndelete msg.freq_bins;\ndelete msg.amplitudes;\n\n// 2. Handle the calibration timestamp\nif (msg.start_ts) {\n    // Save to DB as 'start_ts'. ThingsBoard will add 'ss_' during the next fetch.\n    var attributeData = { start_ts: msg.start_ts };\n    \n    // Inject into metadata immediately so the current message doesn't have startTime: 0\n    metadata.ss_start_ts = msg.start_ts.toString();\n    \n    return [\n        { msg: attributeData, metadata: metadata, msgType: 'POST_ATTRIBUTES_REQUEST' },\n        { msg: msg, metadata: metadata, msgType: 'POST_TELEMETRY_REQUEST' }\n    ];\n}\n\nreturn { msg: msg, metadata: metadata, msgType: 'POST_TELEMETRY_REQUEST' };",
+          "tbelScript": "msg.ss_start_ts = msg.start_ts;\nreturn {msg: msg, metadata: metadata, msgType: msgType};"
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 382,
+          "layoutY": 429
+        }
+      },
+      {
+        "type": "org.thingsboard.rule.engine.telemetry.TbMsgAttributesNode",
+        "name": "Timestamp",
+        "debugSettings": {
+          "failuresEnabled": false,
+          "allEnabled": false,
+          "allEnabledUntil": 1777769243403
+        },
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 3,
+        "configuration": {
+          "processingSettings": {
+            "type": "ON_EVERY_MESSAGE"
+          },
+          "scope": "SERVER_SCOPE",
+          "notifyDevice": false,
+          "sendAttributesUpdatedNotification": false,
+          "updateAttributesOnlyOnValueChange": true
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 952,
+          "layoutY": 591
+        }
+      },
+      {
+        "type": "org.thingsboard.rule.engine.filter.TbJsSwitchNode",
+        "name": "Data Split",
+        "debugSettings": {
+          "failuresEnabled": false,
+          "allEnabled": false,
+          "allEnabledUntil": 1777836188520
+        },
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 0,
+        "configuration": {
+          "scriptLang": "JS",
+          "jsScript": "var routes = [];\n\n// 1. Route for saving the timestamp to the server\nif (msgType === 'POST_ATTRIBUTES_REQUEST') {\n    routes.push('Attribute Path');\n}\n\n// 2. Route for the actual data intended for the SPC calculation\nif (msgType === 'POST_TELEMETRY_REQUEST') {\n    routes.push('Telemetry Path');\n}\n\nreturn routes;",
+          "tbelScript": "function nextRelation(metadata, msg) {\n    return ['one','nine'];\n}\nif(msgType == 'POST_TELEMETRY_REQUEST') {\n    return ['two'];\n}\nreturn nextRelation(metadata, msg);"
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 678,
+          "layoutY": 428
+        }
+      },
+      {
+        "type": "org.thingsboard.rule.engine.action.TbClearAlarmNode",
+        "name": "Auto Clear",
+        "debugSettings": null,
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 0,
+        "configuration": {
+          "scriptLang": "JS",
+          "alarmDetailsBuildJs": "var details = {};\nif (metadata.prevAlarmDetails) {\n    details = JSON.parse(metadata.prevAlarmDetails);\n}\n\n// Add a note to the alarm history about why it cleared\ndetails.clear_reason = \"RMS returned to stable range.\";\ndetails.clearing_rms = msg.total_rms;\n\nreturn details;",
+          "alarmDetailsBuildTbel": "var details = {};\nif (metadata.prevAlarmDetails != null) {\n    details = JSON.parse(metadata.prevAlarmDetails);\n    //remove prevAlarmDetails from metadata\n    metadata.remove('prevAlarmDetails');\n    //now metadata is the same as it comes IN this rule node\n}\n\n\nreturn details;",
+          "alarmType": "Out of Control Interlock"
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 1724,
+          "layoutY": 358
+        }
+      }
+    ],
+    "connections": [
+      {
+        "fromIndex": 0,
+        "toIndex": 1,
+        "type": "Success"
+      },
+      {
+        "fromIndex": 1,
+        "toIndex": 6,
+        "type": "Success"
+      },
+      {
+        "fromIndex": 3,
+        "toIndex": 2,
+        "type": "Out of Control"
+      },
+      {
+        "fromIndex": 3,
+        "toIndex": 4,
+        "type": "Normal"
+      },
+      {
+        "fromIndex": 3,
+        "toIndex": 7,
+        "type": "Freeze Limits"
+      },
+      {
+        "fromIndex": 3,
+        "toIndex": 11,
+        "type": "Normal"
+      },
+      {
+        "fromIndex": 5,
+        "toIndex": 3,
+        "type": "Success"
+      },
+      {
+        "fromIndex": 6,
+        "toIndex": 8,
+        "type": "Success"
+      },
+      {
+        "fromIndex": 8,
+        "toIndex": 10,
+        "type": "Success"
+      },
+      {
+        "fromIndex": 10,
+        "toIndex": 5,
+        "type": "Telemetry Path"
+      },
+      {
+        "fromIndex": 10,
+        "toIndex": 9,
+        "type": "Attribute Path"
+      }
+    ],
+    "ruleChainConnections": null
+  }
+}
